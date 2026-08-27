@@ -7,8 +7,10 @@ def input_error(func):
     def inner(*args, **kwargs):
         try:
             return func(*args, **kwargs)
-        except (ValueError, IndexError):
-            return "Input error. Incorrect data, please input data"
+        except ValueError as e:
+            return f"Input error: {e}"
+        except IndexError:
+                return "Input error. Not enough arguments provider."
 
     return inner
 
@@ -38,6 +40,16 @@ def add_contact(args, book: AddressBook):
     record.add_phone(phone)
 
     return message
+
+@input_error
+def add_email(args, book: AddressBook):
+    name, email = args
+    record = book.find(name)
+
+    if record is None:
+       return "Contact not found." 
+    record.add_email(email)
+    return "Email added"
 
 
 @input_error
@@ -126,6 +138,7 @@ def birthdays(args, book: AddressBook):
 
 handlers = {
     "add": add_contact,
+    "add-email": add_email,
     "change": change_contact,
     "phone": show_phone,
     "all": show_all,
