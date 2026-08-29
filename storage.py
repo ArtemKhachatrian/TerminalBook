@@ -1,16 +1,14 @@
 import pickle
 
-from address_book import AddressBook
 
-
-def save_data(book: AddressBook, filename: str = "addressbook.pkl"):
+def save_data(data, filename):
     with open(filename, "wb") as file:
-        pickle.dump(book, file)
+        pickle.dump(data, file)
 
 
-def load_data(filename: str = "addressbook.pkl") -> AddressBook:
+def load_data(filename):
     try:
         with open(filename, "rb") as file:
             return pickle.load(file)
     except FileNotFoundError:
-        return AddressBook()
+        return None

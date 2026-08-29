@@ -72,3 +72,19 @@ class Record:
         phones = "; ".join(phone.value for phone in self.phones)
 
         return f"Contact name: {self.name.value}, phones: {phones}"
+
+
+class Note:
+    def __init__(self, text: str, label=None):
+        self.text = text
+        self.label = label or []
+
+    def edit(self, text=None, label=None):
+        if text is not None:
+            self.text = text
+
+        if label is not None:
+            self.label = label
+
+    def __str__(self):
+        return self.text
