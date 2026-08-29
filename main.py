@@ -1,6 +1,7 @@
 from address_book import AddressBook
-from models import Record
+from models import Record, Note
 from storage import load_data, save_data
+from notebook import Notebook
 
 
 def input_error(func):
@@ -107,9 +108,9 @@ def show_birthday(args, book: AddressBook):
 
     return record.show_birthday()
 
-
+@input_error
 def birthdays(args, book: AddressBook):
-    upcoming = book.birthdays()
+    upcoming = book.get_upcoming_birthdays(int(args[0]))
 
     if not upcoming:
         return "No upcoming birthdays."
@@ -124,7 +125,142 @@ def birthdays(args, book: AddressBook):
     return "\n".join(result)
 
 
-handlers = {
+@input_error
+def create_note(args, notebook: Notebook):
+    name = args[0]
+
+    if notebook.find(name) is not None:
+        return "A note with this name already exists."
+
+    text = input("Enter note text: ")
+
+    add_label = input("Want to add label? ")
+
+    label = []
+
+    if add_label.lower() == "yes":
+        label = input("Print your labels: ").split()
+
+    note = Note(text, label)
+
+    notebook.add(name, note)
+
+    return "Note saved."
+
+
+@input_error
+def edit_note(args, notebook: Notebook):
+    name = args[0]
+
+    note = notebook.find(name)
+
+    if note is None:
+        return "No such note."
+
+    print(f"Current note: {note}")
+
+    new_text = input("Type your changes: ")
+
+    note.edit(text=new_text)
+
+    change_label = input("Want to change label? ")
+
+    if change_label.lower() == "yes":
+        new_label = input("Print your labels: ").split()
+        note.edit(label=new_label)
+
+    return "Note updated."
+
+
+@input_error
+def show_note(args, notebook: Notebook):
+    name = args[0]
+
+    note = notebook.find(name)
+
+    if note is None:
+        return "No such note."
+
+    return str(note)
+
+
+@input_error
+def find_note(args, notebook: Notebook):
+    query = " ".join(args).lower()
+
+    result = []
+
+    for name, note in notebook.items():
+        if query in note.text.lower():
+            result.append(f"{name}: {note}")
+
+    if not result:
+        return "No notes found."
+
+    return "\n".join(result)
+
+
+@input_error
+def find_by_label(args, notebook: Notebook):
+    labels = {label.lower() for label in args}
+    result = []
+
+    for name, note in notebook.items():
+        note_labels = {
+            label.lower()
+            for label in note.label
+        }
+        if labels & note_labels:
+            result.append(f"{name}: {note}")
+
+    if not result:
+        return "No notes found."
+
+    return "\n".join(result)
+
+@input_error
+def sort_notes_by_label(args, notebook: Notebook):
+    sorted_notes = notebook.sort_by_label()
+
+    if not sorted_notes:
+        return "No notes found."
+
+    result = []
+
+    for label, notes in sorted_notes.items():
+        result.append(f"\n{label}:")
+
+        for name, note in notes:
+            result.append(f"{name}: {note}")
+
+    return "\n".join(result)
+
+
+@input_error
+def delete_note(args, notebook: Notebook):
+    name = args[0]
+
+    if notebook.find(name) is None:
+        return "No such note."
+
+    notebook.delete(name)
+
+    return "Note deleted."
+
+
+def show_all_notes(args, notebook: Notebook):
+    if not notebook:
+        return "No notes found."
+
+    result = ["All notes:"]
+
+    for name, note in notebook.items():
+        result.append(f"{name}: {note}")
+
+    return "\n".join(result)
+
+
+contact_handlers = {
     "add": add_contact,
     "change": change_contact,
     "phone": show_phone,
@@ -136,27 +272,57 @@ handlers = {
 }
 
 
+note_handlers = {
+    "note": create_note,
+    "edit-note": edit_note,
+    "show-note": show_note,
+    "find-note": find_note,
+    "find-label": find_by_label,
+    "sort-label": sort_notes_by_label,
+    "delete-note": delete_note,
+    "all-notes": show_all_notes,
+}
+
+
 def main():
-    book = load_data()
+    book = load_data("addressbook.pkl")
+
+    if book is None:
+        book = AddressBook()
+
+    notebook = load_data("notebook.pkl")
+
+    if notebook is None:
+        notebook = Notebook()
 
     print("Welcome to the assistant bot!")
 
     while True:
         user_input = input("Enter a command: ")
 
+        if not user_input.strip():
+            continue
+
         command, *args = parse_input(user_input)
 
         if command in ("close", "exit"):
-            save_data(book)
+            save_data(book, "addressbook.pkl")
+            save_data(notebook, "notebook.pkl")
+
             print("Good bye!")
             break
 
-        handler = handlers.get(command)
+        if command in contact_handlers:
+            result = contact_handlers[command](args, book)
+            print(result)
+            continue
 
-        if handler:
-            print(handler(args, book))
-        else:
-            print("Invalid command.")
+        if command in note_handlers:
+            result = note_handlers[command](args, notebook)
+            print(result)
+            continue
+
+        print("Invalid command.")
 
 
 if __name__ == "__main__":
