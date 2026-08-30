@@ -1,15 +1,37 @@
 import pickle
+from pathlib import Path
 
 
-def save_data(data, filename):
-    with open(filename, "wb") as file:
+
+DATA_DIR = Path.home() / ".terminal_book"
+DATA_DIR.mkdir(exist_ok=True)
+
+
+
+def get_data_path(filename: str) -> Path:
+    return DATA_DIR / filename
+
+
+def save_data(
+    data,
+    filename: str
+) -> None:
+    filepath = get_data_path(filename)
+
+    with open(filepath, "wb") as file:
         pickle.dump(data, file)
 
 
-def load_data(filename):
+def load_data(filename: str):
+    filepath = get_data_path(filename)
+
     try:
-        with open(filename, "rb") as file:
+        with open(filepath, "rb") as file:
             return pickle.load(file)
 
-    except FileNotFoundError:
+    except (
+        FileNotFoundError,
+        pickle.UnpicklingError,
+        EOFError
+    ):
         return None

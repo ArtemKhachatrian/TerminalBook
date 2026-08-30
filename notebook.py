@@ -4,10 +4,18 @@ from models import Note
 
 
 class Notebook(UserDict):
-    def add(self, name: str, note: Note):
+
+    def add(
+        self,
+        name: str,
+        note: Note
+    ) -> None:
         self.data[name] = note
 
-    def find(self, name: str) -> Note | None:
+    def find(
+        self,
+        name: str
+    ) -> Note | None:
         return self.data.get(name)
 
     def delete(self, name: str) -> bool:
@@ -17,7 +25,7 @@ class Notebook(UserDict):
 
         return False
 
-    def sort_by_label(self):
+    def sort_by_label(self) -> dict:
         result = {}
 
         for name, note in self.items():
@@ -27,6 +35,8 @@ class Notebook(UserDict):
                 if label not in result:
                     result[label] = []
 
-                result[label].append((name, note))
+                result[label].append(
+                    (name, note)
+                )
 
         return dict(sorted(result.items()))

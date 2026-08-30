@@ -1,4 +1,4 @@
-import re
+from difflib import get_close_matches
 
 from address_book import AddressBook
 from models import Record, Note
@@ -11,14 +11,15 @@ def input_error(func):
         try:
             return func(*args, **kwargs)
 
-        except (ValueError, IndexError):
-            return "Input error. Incorrect data, please input data"
+        except (ValueError, IndexError) as error:
+            # CHANGED
+            return str(error)
 
     return inner
 
 
 @input_error
-def parse_input(user_input):
+def parse_input(user_input: str):
     cmd, *args = user_input.split()
 
     cmd = cmd.strip().lower()
@@ -51,23 +52,14 @@ def change_contact(args, book: AddressBook):
     record = book.find(name)
 
     if record is None:
-        return "The contact has not been changed. Incorrect name."
-
+        return "The contact has not been changed.Incorrect name."
     record.edit_phone(old_phone, new_phone)
-
     return "Contact updated."
 
 
 @input_error
 def add_email(args, book: AddressBook):
     name, email = args
-
-    pattern = r"[a-zA-Z0-9._-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+"
-
-    if not re.fullmatch(pattern, email):
-        raise ValueError(
-            "Invalid email format."
-        )
 
     record = book.find(name)
 
@@ -76,7 +68,34 @@ def add_email(args, book: AddressBook):
 
     record.add_email(email)
 
-    return f"Email '{email}' added to contact '{name}'."
+    return (
+        f"Email '{email}' added "
+        f"to contact '{name}'."
+    )
+
+
+@input_error
+def add_address(args,book: AddressBook):
+    name = args[0]
+
+    record = book.find(name)
+
+    if record is None:
+        return "Contact not found."
+
+    address = " ".join(args[1:])
+
+    if not address.strip():
+        raise ValueError(
+            "Address cannot be empty."
+        )
+
+    record.add_address(address)
+
+    return (
+        f"Address added to contact "
+        f"'{name}'."
+    )
 
 
 @input_error
@@ -86,7 +105,10 @@ def show_phone(args, book: AddressBook):
     record = book.find(name)
 
     if record is None:
-        return "The contacts do not contain the specified user."
+        return (
+            "The contacts do not contain "
+            "the specified user."
+        )
 
     return str(record)
 
@@ -103,12 +125,12 @@ def show_all(args, book: AddressBook):
     return "\n".join(result)
 
 
-def hello(args, book: AddressBook):
+def hello(args,book: AddressBook):
     return "How can I help you?"
 
 
 @input_error
-def add_birthday(args, book: AddressBook):
+def add_birthday(args,book: AddressBook):
     name, birthday = args
 
     record = book.find(name)
@@ -122,7 +144,7 @@ def add_birthday(args, book: AddressBook):
 
 
 @input_error
-def show_birthday(args, book: AddressBook):
+def show_birthday(args,book: AddressBook):
     name = " ".join(args)
 
     record = book.find(name)
@@ -134,11 +156,13 @@ def show_birthday(args, book: AddressBook):
 
 
 @input_error
-def birthdays(args, book: AddressBook):
+def birthdays(args,book: AddressBook):
     days = int(args[0]) if args else 7
 
     if days < 0:
-        raise ValueError
+        raise ValueError(
+            "Number of days cannot be negative."
+        )
 
     upcoming = book.get_upcoming_birthdays(days)
 
@@ -149,27 +173,36 @@ def birthdays(args, book: AddressBook):
 
     for item in upcoming:
         result.append(
-            f"{item['name']}: {item['congratulation_date']}"
+            f"{item['name']}: "
+            f"{item['congratulation_date']}"
         )
 
     return "\n".join(result)
 
 
 @input_error
-def create_note(args, notebook: Notebook):
+def create_note(args,notebook: Notebook):
     name = args[0]
 
     if notebook.find(name) is not None:
-        return "A note with this name already exists."
+        return (
+            "A note with this name "
+            "already exists."
+        )
 
     text = input("Enter note text: ")
 
-    add_label = input("Want to add labels? ")
+    add_label = input(
+        "Want to add labels? "
+    )
 
     label = []
 
     if add_label.lower() == "yes":
-        label = input("Print your labels: ").split(",")
+        label = input(
+            "Print your labels: "
+        ).split(",")
+
         label = [
             item.strip()
             for item in label
@@ -184,7 +217,7 @@ def create_note(args, notebook: Notebook):
 
 
 @input_error
-def edit_note(args, notebook: Notebook):
+def edit_note(args,notebook: Notebook):
     name = args[0]
 
     note = notebook.find(name)
@@ -194,15 +227,21 @@ def edit_note(args, notebook: Notebook):
 
     print(f"Current note: {note}")
 
-    new_text = input("Type your changes: ")
+    new_text = input(
+        "Type your changes: "
+    )
 
     if new_text.strip():
         note.edit(text=new_text)
 
-    change_label = input("Want to change labels? ")
+    change_label = input(
+        "Want to change labels? "
+    )
 
     if change_label.lower() == "yes":
-        new_label = input("Print your labels: ").split(",")
+        new_label = input(
+            "Print your labels: "
+        ).split(",")
 
         new_label = [
             item.strip()
@@ -216,7 +255,7 @@ def edit_note(args, notebook: Notebook):
 
 
 @input_error
-def show_note(args, notebook: Notebook):
+def show_note(args,notebook: Notebook):
     name = args[0]
 
     note = notebook.find(name)
@@ -228,7 +267,7 @@ def show_note(args, notebook: Notebook):
 
 
 @input_error
-def find_note(args, notebook: Notebook):
+def find_note(args,notebook: Notebook):
     query = " ".join(args).lower()
 
     if not query:
@@ -238,7 +277,9 @@ def find_note(args, notebook: Notebook):
 
     for name, note in notebook.items():
         if query in note.text.lower():
-            result.append(f"{name}: {note}")
+            result.append(
+                f"{name}: {note}"
+            )
 
     if not result:
         return "No notes found."
@@ -247,7 +288,7 @@ def find_note(args, notebook: Notebook):
 
 
 @input_error
-def find_by_label(args, notebook: Notebook):
+def find_by_label(args,notebook: Notebook):
     labels = {
         label.lower()
         for label in args
@@ -266,7 +307,9 @@ def find_by_label(args, notebook: Notebook):
         }
 
         if labels & note_labels:
-            result.append(f"{name}: {note}")
+            result.append(
+                f"{name}: {note}"
+            )
 
     if not result:
         return "No notes found."
@@ -275,7 +318,7 @@ def find_by_label(args, notebook: Notebook):
 
 
 @input_error
-def sort_notes_by_label(args, notebook: Notebook):
+def sort_notes_by_label(args,notebook: Notebook):
     sorted_notes = notebook.sort_by_label()
 
     if not sorted_notes:
@@ -287,13 +330,15 @@ def sort_notes_by_label(args, notebook: Notebook):
         result.append(f"\n{label}:")
 
         for name, note in notes:
-            result.append(f"{name}: {note}")
+            result.append(
+                f"{name}: {note}"
+            )
 
     return "\n".join(result)
 
 
 @input_error
-def delete_note(args, notebook: Notebook):
+def delete_note(args,notebook: Notebook):
     name = " ".join(args)
 
     if notebook.delete(name):
@@ -303,22 +348,27 @@ def delete_note(args, notebook: Notebook):
 
 
 @input_error
-def show_all_notes(args, notebook: Notebook):
+def show_all_notes(args,notebook: Notebook):
     if not notebook:
         return "No notes found."
 
     result = ["All notes:"]
 
     for name, note in notebook.items():
-        result.append(f"{name}: {note}")
+        result.append(
+            f"{name}: {note}"
+        )
 
     return "\n".join(result)
 
 
 @input_error
-def search_contact(args, book: AddressBook):
+def search_contact(args,book: AddressBook):
     if not args:
-        return "Enter a name or part of a name to search for."
+        return (
+            "Enter a name or part "
+            "of a name to search for."
+        )
 
     query = " ".join(args)
 
@@ -326,8 +376,8 @@ def search_contact(args, book: AddressBook):
 
     if not found_records:
         return (
-            f"Contacts related to the search query "
-            f"'{query}' not found."
+            f"Contacts related to the "
+            f"search query '{query}' not found."
         )
 
     return "\n".join(
@@ -337,22 +387,32 @@ def search_contact(args, book: AddressBook):
 
 
 @input_error
-def delete_contact(args, book: AddressBook):
+def delete_contact(args,book: AddressBook):
     if not args:
-        return "Enter the name of the contact you want to delete."
+        return (
+            "Enter the name of the contact "
+            "you want to delete."
+        )
 
     name = " ".join(args)
 
     if book.delete(name):
-        return f"Contact '{name}' successfully deleted."
+        return (
+            f"Contact '{name}' "
+            f"successfully deleted."
+        )
 
-    return f"Contact with the name '{name}' not found."
+    return (
+        f"Contact with the name "
+        f"'{name}' not found."
+    )
 
 
 contact_handlers = {
     "add": add_contact,
     "change": change_contact,
     "add-email": add_email,
+    "add-address": add_address,
     "phone": show_phone,
     "all": show_all,
     "hello": hello,
@@ -362,7 +422,6 @@ contact_handlers = {
     "search": search_contact,
     "delete": delete_contact,
 }
-
 
 note_handlers = {
     "note": create_note,
@@ -374,6 +433,29 @@ note_handlers = {
     "delete-note": delete_note,
     "all-notes": show_all_notes,
 }
+
+
+def suggest_command(command: str) -> str:
+    all_commands = (
+            list(contact_handlers)
+            + list(note_handlers)
+            + ["hello", "close", "exit"]
+    )
+
+    matches = get_close_matches(
+        command,
+        all_commands,
+        n=1,
+        cutoff=0.5
+    )
+
+    if matches:
+        return (
+            f"Invalid command. "
+            f"Did you mean '{matches[0]}'?"
+        )
+
+    return "Invalid command."
 
 
 def main():
@@ -389,32 +471,52 @@ def main():
 
     print("Welcome to the assistant bot!")
 
-    while True:
-        user_input = input("Enter a command: ")
+    try:
+        while True:
+            user_input = input(
+                "Enter a command: "
+            )
 
-        if not user_input.strip():
-            continue
+            if not user_input.strip():
+                continue
 
-        command, *args = parse_input(user_input)
+            command, *args = parse_input(
+                user_input
+            )
 
-        if command in ("close", "exit"):
-            save_data(book, "addressbook.pkl")
-            save_data(notebook, "notebook.pkl")
+            if command in ("close", "exit"):
+                break
 
-            print("Good bye!")
-            break
+            if command in contact_handlers:
+                result = contact_handlers[command](
+                    args,
+                    book
+                )
+                print(result)
+                continue
 
-        if command in contact_handlers:
-            result = contact_handlers[command](args, book)
-            print(result)
-            continue
+            if command in note_handlers:
+                result = note_handlers[command](
+                    args,
+                    notebook
+                )
+                print(result)
+                continue
+            print(suggest_command(command))
+    except KeyboardInterrupt:
+        print("\nProgram interrupted.")
+    finally:
+        save_data(
+            book,
+            "addressbook.pkl"
+        )
 
-        if command in note_handlers:
-            result = note_handlers[command](args, notebook)
-            print(result)
-            continue
+        save_data(
+            notebook,
+            "notebook.pkl"
+        )
 
-        print("Invalid command.")
+        print("Data saved. Goodbye!")
 
 
 if __name__ == "__main__":
