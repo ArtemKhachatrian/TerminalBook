@@ -110,7 +110,9 @@ def show_birthday(args, book: AddressBook):
 
 @input_error
 def birthdays(args, book: AddressBook):
-    upcoming = book.get_upcoming_birthdays(int(args[0]))
+    days = int(args[0]) if args else 7
+
+    upcoming = book.get_upcoming_birthdays(days)
 
     if not upcoming:
         return "No upcoming birthdays."
@@ -124,7 +126,6 @@ def birthdays(args, book: AddressBook):
 
     return "\n".join(result)
 
-
 @input_error
 def create_note(args, notebook: Notebook):
     name = args[0]
@@ -134,15 +135,15 @@ def create_note(args, notebook: Notebook):
 
     text = input("Enter note text: ")
 
-    add_label = input("Want to add label? ")
+    add_label = input("Want to add labels? ")
 
     label = []
 
     if add_label.lower() == "yes":
-        label = input("Print your labels: ").split()
+        label = input("Print your labels: ").split(",")
+        label = [item.strip() for item in label if item.strip()]
 
     note = Note(text, label)
-
     notebook.add(name, note)
 
     return "Note saved."
@@ -161,12 +162,14 @@ def edit_note(args, notebook: Notebook):
 
     new_text = input("Type your changes: ")
 
-    note.edit(text=new_text)
+    if new_text.strip():
+        note.edit(text=new_text)
 
-    change_label = input("Want to change label? ")
+    change_label = input("Want to change labels? ")
 
     if change_label.lower() == "yes":
-        new_label = input("Print your labels: ").split()
+        new_label = input("Print your labels: ").split(",")
+        new_label = [item.strip() for item in new_label if item.strip()]
         note.edit(label=new_label)
 
     return "Note updated."
@@ -247,7 +250,7 @@ def delete_note(args, notebook: Notebook):
 
     return "Note deleted."
 
-
+@input_error
 def show_all_notes(args, notebook: Notebook):
     if not notebook:
         return "No notes found."
@@ -258,6 +261,31 @@ def show_all_notes(args, notebook: Notebook):
         result.append(f"{name}: {note}")
 
     return "\n".join(result)
+
+@input_error
+def search_contact(args, book: AddressBook):
+    if not args:
+        return "Enter a name or part of a name to search for."
+
+    query = " ".join(args)
+    found_records = book.search_by_name(query)
+
+    if not found_records:
+        return f"Contacts related to the search query '{query}' not found."
+
+    return "\n".join(str(record) for record in found_records)
+
+
+def delete_contact(args, book: AddressBook):
+    if not args:
+        return "Enter the name of the contact you want to delete."
+
+    name = " ".join(args)
+
+    if book.delete(name):
+        return f"Contact '{name}' successfully deleted."
+
+    return f"Contact with the name '{name}' not found."
 
 
 contact_handlers = {
@@ -285,34 +313,6 @@ note_handlers = {
     "delete-note": delete_note,
     "all-notes": show_all_notes,
 }
-
-
-
-def search_contact(args, book: AddressBook):
-    if not args:
-        return "Помилка: введіть ім'я або частину імені для пошуку."
-    
-    query = args[0]
-    found_records = book.search_by_name(query)
-    
-    if not found_records:
-        return f"Контактів із пошуковим запитом '{query}' не знайдено."
-    
-    # Повертаємо список рядкових представлень знайдених контактів
-    return "\n".join(str(record) for record in found_records)
-
-
-def delete_contact(args, book: AddressBook):
-    if not args:
-        return "Помилка: введіть ім'я контакту, який потрібно видалити."
-    
-    name = args[0]
-    if book.delete_record(name):
-        return f"Контакт '{name}' успішно видалено."
-    else:
-        return f"Помилка: контакт із іменем '{name}' не знайдено."
-
-
 
 
 def main():
