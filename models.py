@@ -1,3 +1,4 @@
+
 from datetime import datetime
 
 
@@ -12,6 +13,8 @@ class Field:
 class Name(Field):
     pass
 
+class Email(Field):
+    pass
 
 class Phone(Field):
     def __init__(self, value: str):
@@ -29,17 +32,12 @@ class Birthday(Field):
             raise ValueError("Birthday must be in DD.MM.YYYY format")
 
 
-class Email(Field):
-    pass
-
-
-
 class Record:
     def __init__(self, name: str):
         self.name = Name(name)
         self.phones = []
         self.birthday = None
-        self.email = None  
+        self.email = None 
 
     def add_phone(self, phone: str):
         self.phones.append(Phone(phone))
@@ -62,8 +60,11 @@ class Record:
         for item in self.phones:
             if item.value == phone:
                 return item
-
+              
         return None
+      
+    def add_email(self, email: str):  
+        self.email = Email(email)
 
     def add_birthday(self, birthday: str):
         self.birthday = Birthday(birthday)
@@ -74,11 +75,23 @@ class Record:
 
         return str(self.birthday)
 
-    def add_email(self, email: str):  
-        self.email = Email(email)
-
     def __str__(self):
         phones = "; ".join(phone.value for phone in self.phones)
-        email_str = f", email: {self.email.value}" if self.email else ""  
 
-        return f"Contact name: {self.name.value}, phones: {phones}{email_str}"
+        return f"Contact name: {self.name.value}, phones: {phones}"
+
+
+class Note:
+    def __init__(self, text: str, label=None):
+        self.text = text
+        self.label = label or []
+
+    def edit(self, text=None, label=None):
+        if text is not None:
+            self.text = text
+
+        if label is not None:
+            self.label = label
+
+    def __str__(self):
+        return self.text

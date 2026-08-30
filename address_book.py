@@ -14,11 +14,17 @@ class AddressBook(UserDict):
     def delete(self, name: str):
         if name in self.data:
             del self.data[name]
+            return True
+        return False
+    def search_by_name(self, query: str) -> list[Record]:
+        query = query.lower()
+        return [
+            record
+            for name, record in self.data.items()
+            if query in name.lower()
+        ]
 
-    def birthdays(self):
-        return self.get_upcoming_birthdays()
-
-    def get_upcoming_birthdays(self):
+    def get_upcoming_birthdays(self, days: int = 7):
         today = datetime.now().date()
         result = []
 
@@ -26,23 +32,27 @@ class AddressBook(UserDict):
             if record.birthday is None:
                 continue
 
-            birthday = record.birthday.value
-            birthday = birthday.replace(year=today.year)
+            birthday = record.birthday.value.replace(year=today.year)
 
             if birthday < today:
                 birthday = birthday.replace(year=today.year + 1)
 
-            days_until_birthday = (birthday - today).days
+            congratulation_date = birthday
 
-            if 0 <= days_until_birthday <= 7:
-                if birthday.isoweekday() == 6:
-                    birthday += timedelta(days=2)
-                elif birthday.isoweekday() == 7:
-                    birthday += timedelta(days=1)
+            if congratulation_date.isoweekday() == 6:
+                congratulation_date += timedelta(days=2)
 
+            elif congratulation_date.isoweekday() == 7:
+                congratulation_date += timedelta(days=1)
+
+            days_until_congratulation = (
+                    congratulation_date - today
+            ).days
+
+            if 0 <= days_until_congratulation <= days:
                 result.append({
                     "name": record.name.value,
-                    "congratulation_date": birthday.strftime("%Y.%m.%d")
+                    "congratulation_date": congratulation_date.strftime("%Y.%m.%d")
                 })
 
         return result
