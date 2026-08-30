@@ -11,20 +11,25 @@ class AddressBook(UserDict):
     def find(self, name: str) -> Record | None:
         return self.data.get(name)
 
-    def delete(self, name: str):
+    def delete(self, name: str) -> bool:
         if name in self.data:
             del self.data[name]
             return True
-        return False
-    def search_by_name(self, query: str) -> list[Record]:
-        query = query.lower()
-        return [
-            record
-            for name, record in self.data.items()
-            if query in name.lower()
-        ]
 
-    def get_upcoming_birthdays(self, days: int = 7):
+        return False
+
+    def search_by_name(self, query: str):
+        query = query.lower()
+
+        results = []
+
+        for name, record in self.data.items():
+            if query in name.lower():
+                results.append(record)
+
+        return results
+
+    def get_upcoming_birthdays(self, days=7):
         today = datetime.now().date()
         result = []
 
@@ -32,27 +37,41 @@ class AddressBook(UserDict):
             if record.birthday is None:
                 continue
 
-            birthday = record.birthday.value.replace(year=today.year)
+            birthday = record.birthday.value
+
+            try:
+                birthday = birthday.replace(year=today.year)
+            except ValueError:
+                birthday = birthday.replace(
+                    year=today.year,
+                    day=28
+                )
 
             if birthday < today:
-                birthday = birthday.replace(year=today.year + 1)
+                try:
+                    birthday = birthday.replace(year=today.year + 1)
+                except ValueError:
+                    birthday = birthday.replace(
+                        year=today.year + 1,
+                        day=28
+                    )
 
-            congratulation_date = birthday
+            days_until_birthday = (birthday - today).days
 
-            if congratulation_date.isoweekday() == 6:
-                congratulation_date += timedelta(days=2)
+            if 0 <= days_until_birthday <= days:
+                congratulation_date = birthday
 
-            elif congratulation_date.isoweekday() == 7:
-                congratulation_date += timedelta(days=1)
+                if birthday.isoweekday() == 6:
+                    congratulation_date += timedelta(days=2)
 
-            days_until_congratulation = (
-                    congratulation_date - today
-            ).days
+                elif birthday.isoweekday() == 7:
+                    congratulation_date += timedelta(days=1)
 
-            if 0 <= days_until_congratulation <= days:
                 result.append({
                     "name": record.name.value,
-                    "congratulation_date": congratulation_date.strftime("%Y.%m.%d")
+                    "congratulation_date": congratulation_date.strftime(
+                        "%Y.%m.%d"
+                    )
                 })
 
         return result

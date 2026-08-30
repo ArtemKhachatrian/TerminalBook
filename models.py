@@ -1,4 +1,3 @@
-
 from datetime import datetime
 
 
@@ -13,8 +12,10 @@ class Field:
 class Name(Field):
     pass
 
+
 class Email(Field):
     pass
+
 
 class Phone(Field):
     def __init__(self, value: str):
@@ -27,9 +28,11 @@ class Phone(Field):
 class Birthday(Field):
     def __init__(self, value: str):
         try:
-            self.value = datetime.strptime(value, "%d.%m.%Y").date()
+            birthday = datetime.strptime(value, "%d.%m.%Y").date()
         except ValueError:
             raise ValueError("Birthday must be in DD.MM.YYYY format")
+
+        super().__init__(birthday)
 
 
 class Record:
@@ -37,7 +40,7 @@ class Record:
         self.name = Name(name)
         self.phones = []
         self.birthday = None
-        self.email = None 
+        self.email = None
 
     def add_phone(self, phone: str):
         self.phones.append(Phone(phone))
@@ -45,8 +48,10 @@ class Record:
     def remove_phone(self, phone: str):
         found = self.find_phone(phone)
 
-        if found:
-            self.phones.remove(found)
+        if found is None:
+            raise ValueError("Phone number not found")
+
+        self.phones.remove(found)
 
     def edit_phone(self, old_phone: str, new_phone: str):
         found = self.find_phone(old_phone)
@@ -60,10 +65,10 @@ class Record:
         for item in self.phones:
             if item.value == phone:
                 return item
-              
+
         return None
-      
-    def add_email(self, email: str):  
+
+    def add_email(self, email: str):
         self.email = Email(email)
 
     def add_birthday(self, birthday: str):
@@ -78,13 +83,21 @@ class Record:
     def __str__(self):
         phones = "; ".join(phone.value for phone in self.phones)
 
-        return f"Contact name: {self.name.value}, phones: {phones}"
+        email = self.email.value if self.email else "Not set"
+        birthday = self.birthday.value if self.birthday else "Not set"
+
+        return (
+            f"Contact name: {self.name.value}, "
+            f"phones: {phones}, "
+            f"email: {email}, "
+            f"birthday: {birthday}"
+        )
 
 
 class Note:
     def __init__(self, text: str, label=None):
         self.text = text
-        self.label = label or []
+        self.label = label if label is not None else []
 
     def edit(self, text=None, label=None):
         if text is not None:
@@ -94,4 +107,8 @@ class Note:
             self.label = label
 
     def __str__(self):
+        if self.label:
+            labels = ", ".join(self.label)
+            return f"{self.text} [Labels: {labels}]"
+
         return self.text

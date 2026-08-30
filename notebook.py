@@ -4,19 +4,18 @@ from models import Note
 
 
 class Notebook(UserDict):
-
     def add(self, name: str, note: Note):
         self.data[name] = note
-
 
     def find(self, name: str) -> Note | None:
         return self.data.get(name)
 
-
-    def delete(self, name: str):
+    def delete(self, name: str) -> bool:
         if name in self.data:
             del self.data[name]
+            return True
 
+        return False
 
     def sort_by_label(self):
         result = {}
