@@ -29,11 +29,17 @@ class Birthday(Field):
             raise ValueError("Birthday must be in DD.MM.YYYY format")
 
 
+class Email(Field):
+    pass
+
+
+
 class Record:
     def __init__(self, name: str):
         self.name = Name(name)
         self.phones = []
         self.birthday = None
+        self.email = None  
 
     def add_phone(self, phone: str):
         self.phones.append(Phone(phone))
@@ -68,7 +74,11 @@ class Record:
 
         return str(self.birthday)
 
+    def add_email(self, email: str):  
+        self.email = Email(email)
+
     def __str__(self):
         phones = "; ".join(phone.value for phone in self.phones)
+        email_str = f", email: {self.email.value}" if self.email else ""  
 
-        return f"Contact name: {self.name.value}, phones: {phones}"
+        return f"Contact name: {self.name.value}, phones: {phones}{email_str}"
