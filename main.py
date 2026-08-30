@@ -40,6 +40,24 @@ def add_contact(args, book: AddressBook):
 
     return message
 
+@input_error
+def add_email(args, book: AddressBook):
+    if len(args) < 2:
+        raise IndexError
+
+    name, email = args
+
+    pattern = r"[a-zA-Z0-9._-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+"
+    if not re.fullmatch(pattern, email):
+        raise ValueError("Invalid email format. Must contain '@' and a valid domain (e.g., user@example.com).")
+
+    record = book.find(name)
+    if record is None:
+        return "Contact not found."
+
+    record.add_email(email)
+    return f"Email '{email}' added to contact '{name}'."
+
 
 @input_error
 def change_contact(args, book: AddressBook):
