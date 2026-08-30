@@ -269,6 +269,9 @@ contact_handlers = {
     "add-birthday": add_birthday,
     "show-birthday": show_birthday,
     "birthdays": birthdays,
+    "search": search_contact,
+    "delete": delete_contact,
+    
 }
 
 
@@ -282,6 +285,34 @@ note_handlers = {
     "delete-note": delete_note,
     "all-notes": show_all_notes,
 }
+
+
+
+def search_contact(args, book: AddressBook):
+    if not args:
+        return "Помилка: введіть ім'я або частину імені для пошуку."
+    
+    query = args[0]
+    found_records = book.search_by_name(query)
+    
+    if not found_records:
+        return f"Контактів із пошуковим запитом '{query}' не знайдено."
+    
+    # Повертаємо список рядкових представлень знайдених контактів
+    return "\n".join(str(record) for record in found_records)
+
+
+def delete_contact(args, book: AddressBook):
+    if not args:
+        return "Помилка: введіть ім'я контакту, який потрібно видалити."
+    
+    name = args[0]
+    if book.delete_record(name):
+        return f"Контакт '{name}' успішно видалено."
+    else:
+        return f"Помилка: контакт із іменем '{name}' не знайдено."
+
+
 
 
 def main():

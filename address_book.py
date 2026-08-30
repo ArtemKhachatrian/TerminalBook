@@ -43,3 +43,21 @@ class AddressBook(UserDict):
                 })
 
         return result
+    
+    
+    
+    def search_by_name(self, query: str):
+        # Шукає контакти, ім'я яких містить пошуковий запит (нечутливо до регістру)
+        query = query.lower()
+        results = []
+        for name, record in self.data.items():
+            if query in name.lower():
+                results.append(record)
+        return results
+
+    def delete_record(self, name: str) -> bool:
+        # Видаляє контакт за іменем. Повертає True, якщо видалено, і False, якщо не знайдено
+        if name in self.data:
+            del self.data[name]
+            return True
+        return False
