@@ -1,3 +1,4 @@
+
 from datetime import datetime
 
 
@@ -12,6 +13,8 @@ class Field:
 class Name(Field):
     pass
 
+class Email(Field):
+    pass
 
 class Phone(Field):
     def __init__(self, value: str):
@@ -34,6 +37,7 @@ class Record:
         self.name = Name(name)
         self.phones = []
         self.birthday = None
+        self.email = None 
 
     def add_phone(self, phone: str):
         self.phones.append(Phone(phone))
@@ -56,8 +60,11 @@ class Record:
         for item in self.phones:
             if item.value == phone:
                 return item
-
+              
         return None
+      
+    def add_email(self, email: str):  
+        self.email = Email(email)
 
     def add_birthday(self, birthday: str):
         self.birthday = Birthday(birthday)
