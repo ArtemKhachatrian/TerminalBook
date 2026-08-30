@@ -12,7 +12,6 @@ def input_error(func):
             return func(*args, **kwargs)
 
         except (ValueError, IndexError) as error:
-            # CHANGED
             return str(error)
 
     return inner
